@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Konoa Dashboard",
+  "version": "1.21.0",
+  "description": "Professional financial trading dashboard with live market analysis, technical indicators, real-time charts, news feeds, and customizable watchlists.",
+  "permissions": [
+    "storage",
+    "bookmarks",
+    "topSites",
+    "history",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; frame-src 'self' https://www.tradingview.com https://s3.tradingview.com; connect-src 'self' https://example.com https://api.rss2json.com https://feeds.bloomberg.com https://www.theguardian.com https://rss.nytimes.com https://www.aljazeera.com https://www.cnbc.com http://feeds.reuters.com https://www.nasdaqtrader.com;"
+  },
+  "chrome_url_overrides": {
+    "newtab": "dashboard.html"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

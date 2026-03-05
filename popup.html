@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            width: 300px;
+            padding: 20px;
+            background: #0a0e17;
+            color: #f9fafb;
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0;
+        }
+        .popup-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+        }
+        .popup-icon {
+            font-size: 1.5rem;
+            color: #00d4ff;
+        }
+        .popup-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .setting-label {
+            font-size: 0.9rem;
+            color: #9ca3af;
+        }
+        .toggle {
+            width: 40px;
+            height: 20px;
+            background: #1f2937;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .toggle.active {
+            background: #00d4ff;
+        }
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+        .toggle.active::after {
+            transform: translateX(20px);
+        }
+        .version {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="popup-header">
+        <span class="popup-icon">◈</span>
+        <span class="popup-title">Konoa Dashboard</span>
+    </div>
+    
+    <div class="setting-item">
+        <span class="setting-label">Animations</span>
+        <div class="toggle active" id="animToggle"></div>
+    </div>
+    
+    <div class="setting-item">
+        <span class="setting-label">Grid Overlay</span>
+        <div class="toggle active" id="gridToggle"></div>
+    </div>
+    
+    <div class="setting-item">
+        <span class="setting-label">Sound Effects</span>
+        <div class="toggle" id="soundToggle"></div>
+    </div>
+    
+    <div class="setting-item">
+        <span class="setting-label">Bookmarks & History</span>
+        <div class="toggle" id="bookmarksHistoryToggle"></div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

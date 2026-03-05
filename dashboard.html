@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Tab</title>
+    <link rel="stylesheet" href="style.css"> <!-- fixed filename -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Intensified background effects -->
+        <div class="grid-overlay"></div>
+        <div class="scan-line"></div>
+        <div class="noise-overlay"></div>
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+        <div class="crt-flicker"></div>
+
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="logo-section">
+                <div class="logo-icon">◈</div>
+                <div class="logo-text">
+                    <span class="primary">KONOA DASHBOARD</span>
+                    <span class="secondary">v1.21</span>
+                </div>
+            </div>
+            <div class="system-status">
+                <div class="status-item">
+                    <span class="status-indicator online"></span>
+                    <span class="status-text">SYSTEM ONLINE</span>
+                </div>
+                <div class="time-display" id="clock">00:00:00</div>
+            </div>
+        </header>
+
+        <!-- Main Grid -->
+        <main class="dashboard-grid">
+            <!-- Search Module (unchanged) -->
+            <section class="module search-module">
+                <div class="module-header">
+                    <span class="module-icon">⌕</span>
+                    <span class="module-title">QUERY INTERFACE</span>
+                </div>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Initiate search protocol ..." autocomplete="off">
+                </div>
+            </section>
+
+            <!-- Bookmarks Module -->
+            <section class="module bookmarks-module">
+                <div class="module-header">
+                    <span class="module-icon">★</span>
+                    <span class="module-title">BOOKMARKS</span>
+                </div>
+                <div class="bookmarks-list" id="bookmarksList">
+                    <!-- Dynamically populated -->
+                </div>
+            </section>
+
+            <!-- Activity Feed -->
+            <section class="module activity-module">
+                <div class="module-header">
+                    <span class="module-icon">◉</span>
+                    <span class="module-title">BROWSE HISTORY</span>
+                </div>
+                <div class="activity-feed" id="activityFeed">
+                    <!-- Dynamically populated -->
+                </div>
+            </section>
+
+            <!-- Market Charts -->
+            <section class="module market-charts">
+                <div class="module-header">
+                    <span class="module-icon">📈</span>
+                    <span class="module-title">MARKET ANALYSIS</span>
+                </div>
+                <div class="market-analysis-grid">
+                    <!-- Single Column Layout -->
+                    <div class="analysis-column">
+                        <div class="column-header">
+                            <input type="text" class="ticker-input" id="ticker1" placeholder="Enter symbol (e.g. NASDAQ:AAPL)" value="NASDAQ:AAPL">
+                            <button class="update-btn" data-column="1">UPDATE</button>
+                        </div>
+                        <div class="combined-chart-container">
+                            <div id="chart1-combined" class="chart-container-large"></div>
+                        </div>
+                        <div class="analysis-widgets">
+                            <div class="technical-widget" id="technical1"></div>
+                            <div class="fundamental-widget" id="fundamental1"></div>
+                        </div>
+                        <div class="heatmap-section">
+                            <div class="heatmap-tabs">
+                                <button class="tab-btn active" data-market="sp500">S&P500</button>
+                                <button class="tab-btn" data-market="crypto">Crypto</button>
+                                <button class="tab-btn" data-market="indonesia">IDX Composite</button>
+                            </div>
+                            <div class="heatmap-container" id="heatmapContainer">
+                                <!-- S&P500 Heatmap -->
+                                <div class="heatmap-widget active" data-market="sp500" id="heatmap-sp500"></div>
+                                <!-- Crypto Heatmap -->
+                                <div class="heatmap-widget" data-market="crypto" id="heatmap-crypto"></div>
+                                <!-- Indonesian Heatmap -->
+                                <div class="heatmap-widget" data-market="indonesia" id="heatmap-indonesia"></div>
+                            </div>
+                        </div>
+                        <div class="news-container-large">
+                            <div class="news-header">Global News</div>
+                            <div class="news-feed-large" id="news1">
+                                <!-- News items will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Economic Calendar & News -->
+            <section class="module economic-news-module">
+                <div class="module-header">
+                    <span class="module-icon">📅</span>
+                    <span class="module-title">ECONOMIC CALENDAR & NEWS</span>
+                </div>
+                <div class="economic-news-grid">
+                    <!-- Economic Calendar -->
+                    <div class="economic-calendar-widget" id="economicCalendarContainer">
+                        <!-- Generated by JS -->
+                    </div>
+                    <!-- TradingView News -->
+                    <div class="tradingview-news-widget" id="tradingviewNewsContainer">
+                        <!-- Generated by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Forex Cross Rates -->
+            <section class="module forex-module">
+                <div class="module-header">
+                    <span class="module-icon">💱</span>
+                    <span class="module-title">FOREX CROSS RATES</span>
+                </div>
+                <div class="forex-container" id="forexContainer">
+                    <!-- Forex widget will be inserted here -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Credit Footer -->
+        <footer class="dashboard-footer">
+            <div class="footer-content">
+                <div class="tab-counter">
+                    <span class="counter-icon">⊞</span>
+                    <span class="counter-label">OPEN TABS:</span>
+                    <span class="counter-value" id="tabCount">--</span>
+                </div>
+                <div class="credit-line">
+                    Made with ❤️ by <a href="https://github.com/arzhavz" target="_blank">@arzhavz</a> | Data provided by <a href="https://www.tradingview.com/" target="_blank">TradingView</a>
+                </div>
+                <div class="system-metrics">
+                    <span class="metric-item">
+                        <span class="metric-icon">💜💛</span>
+                        <span class="metric-text">Ore no Konoa!</span>
+                    </span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
