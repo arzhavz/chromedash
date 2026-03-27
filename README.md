@@ -138,7 +138,7 @@ The popup interface provides access to runtime configuration options:
 - **Grid Overlay Toggle**: Show/hide the cyberpunk grid background effect
 - **Sound Effects Toggle**: Enable/disable audio feedback (future implementation)
 - **Theme Customization**: Interface appearance adjustments (future implementation)
-- **Data Refresh Configuration**: Adjustable update frequencies for market data and news feeds
+- **Data Refresh Configuration**: Adjustable update frequencies for market data and news feeds (future implementation)
 
 ### Permissions and Security
 The extension requires specific Chrome permissions for full functionality:
