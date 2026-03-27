@@ -246,6 +246,21 @@ body {
     letter-spacing: 3px;
 }
 
+.metrics-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-left: 20px;
+}
+
+#memoryUsage, #networkSpeed {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--accent-cyan);
+    text-shadow: var(--glow-cyan);
+    letter-spacing: 1px;
+}
+
 .date-display {
     font-family: 'Share Tech Mono', monospace;
     font-size: 1rem;

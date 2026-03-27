@@ -6,6 +6,8 @@ class DashboardController {
     async init() {
         const settings = await this.loadSettings();
         this.setupClock();
+        this.setupMemoryUsage();
+        this.setupNetworkSpeed();
         this.setupNetworkStatus();
         this.setupSearch();
         if (settings.bookmarksHistory) {
@@ -85,6 +87,101 @@ class DashboardController {
         
         updateTime();
         setInterval(updateTime, 1000);
+    }
+
+    // Memory Usage
+    setupMemoryUsage() {
+        if (typeof chrome !== 'undefined' && chrome.system && chrome.system.memory) {
+            const clockElement = document.getElementById('clock');
+            if (clockElement) {
+                const metricsContainer = document.createElement('div');
+                metricsContainer.className = 'metrics-container';
+                clockElement.parentNode.insertBefore(metricsContainer, clockElement.nextSibling);
+                
+                const memoryElement = document.createElement('div');
+                memoryElement.id = 'memoryUsage';
+                memoryElement.textContent = 'MEM: Loading...';
+                metricsContainer.appendChild(memoryElement);
+                
+                // Update immediately and every 1 seconds
+                this.updateMemoryUsage();
+                setInterval(() => this.updateMemoryUsage(), 1000);
+            }
+        }
+    }
+
+    // Network Speed
+    setupNetworkSpeed() {
+        const metricsContainer = document.querySelector('.metrics-container');
+        if (metricsContainer) {
+            const networkElement = document.createElement('div');
+            networkElement.id = 'networkSpeed';
+            networkElement.textContent = 'NET: Loading...';
+            metricsContainer.appendChild(networkElement);
+
+            this.networkSpeedLast = 'N/A';
+            this.networkSpeedFetchInProgress = false;
+
+            // Update immediately and every 1 seconds
+            this.updateNetworkSpeed();
+            setInterval(() => this.updateNetworkSpeed(), 1000);
+        }
+    }
+
+    async updateMemoryUsage() {
+        try {
+            const info = await new Promise(resolve => {
+                chrome.system.memory.getInfo(resolve);
+            });
+            const used = info.capacity - info.availableCapacity;
+            const usedGB = (used / (1024 * 1024 * 1024)).toFixed(2);
+            const totalGB = (info.capacity / (1024 * 1024 * 1024)).toFixed(2);
+            document.getElementById('memoryUsage').textContent = `MEM: ${usedGB}GB / ${totalGB}GB`;
+        } catch (error) {
+            document.getElementById('memoryUsage').textContent = 'MEM: N/A';
+        }
+    }
+
+    async updateNetworkSpeed() {
+        const networkElement = document.getElementById('networkSpeed');
+        if (!networkElement) return;
+
+        if (this.networkSpeedFetchInProgress) {
+            return;
+        }
+
+        this.networkSpeedFetchInProgress = true;
+
+        try {
+            // Keep the previous value until a new measurement is ready
+            networkElement.textContent = `NET: ${this.networkSpeedLast} Mbps`;
+
+            const startTime = performance.now();
+            const response = await fetch(`https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf?cacheBust=${Date.now()}`, {
+                method: 'GET',
+                cache: 'no-cache',
+                mode: 'cors'
+            });
+            const endTime = performance.now();
+
+            if (response.ok) {
+                const data = await response.arrayBuffer();
+                const sizeBytes = data.byteLength || 2048;
+                const durationMs = Math.max(1, endTime - startTime);
+                const durationSec = durationMs / 1000;
+                const speedBps = sizeBytes * 8 / durationSec;
+                const speedMbps = (speedBps / (1024 * 1024)).toFixed(2);
+
+                this.networkSpeedLast = speedMbps;
+                networkElement.textContent = `NET: ${speedMbps} Mbps`;
+            } else {
+                networkElement.textContent = `NET: ${this.networkSpeedLast} Mbps`;
+            }
+        } catch (error) {
+            networkElement.textContent = 'NET: Offline';
+        } finally {
+            this.networkSpeedFetchInProgress = false;
+        }
     }
 
     // Search Functionality (Google only)
@@ -572,6 +669,19 @@ class DashboardController {
         try {
             // Expanded news sources with CORS-enabled RSS feeds
             const newsSources = [
+                // Global News
+                {
+                    name: 'Al Jazeera',
+                    url: 'https://www.aljazeera.com/xml/rss/all.xml',
+                    color: '#CC0000',
+                    useLocalParser: true
+                },
+                {
+                    name: 'UN News',
+                    url: 'https://news.un.org/feed/subscribe/en/news/all/rss.xml',
+                    color: '#009EDB',
+                    useLocalParser: false
+                },
                 // Financial News
                 {
                     name: 'MarketWatch',
@@ -650,7 +760,7 @@ class DashboardController {
 
             // Sort by date and take top 100
             allNews.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-            const topNews = allNews.slice(0, 100);
+            const topNews = allNews.slice(0, 512);
 
             // Render news
             container.innerHTML = '';
@@ -666,6 +776,18 @@ class DashboardController {
 
     async fetchNewsFromSource(source) {
         try {
+            // Use local parser if specified (e.g., for Al Jazeera RSS)
+            if (source.useLocalParser) {
+                try {
+                    const response = await fetch(source.url);
+                    const text = await response.text();
+                    return this.parseRSSLocal(text, source);
+                } catch (localError) {
+                    console.log(`Local parser failed for ${source.name}:`, localError);
+                    return [];
+                }
+            }
+            
             // Use a CORS proxy for RSS feeds
             const proxyUrl = 'https://api.rss2json.com/v1/api.json?rss_url=';
             const response = await fetch(proxyUrl + encodeURIComponent(source.url));
@@ -686,11 +808,45 @@ class DashboardController {
             try {
                 const response = await fetch(source.url);
                 const text = await response.text();
-                return this.parseRSS(text, source);
+                return this.parseRSSLocal(text, source);
             } catch (fallbackError) {
                 return [];
             }
         }
+    }
+
+    parseRSSLocal(xmlText, source) {
+        // Local RSS parser with date format conversion
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(xmlText, 'text/xml');
+        
+        // Check for parse errors
+        if (xml.getElementsByTagName('parsererror').length > 0) {
+            console.error('XML parse error');
+            return [];
+        }
+        
+        const items = xml.querySelectorAll('item');
+        
+        return Array.from(items).slice(0, 32).map(item => {
+            let pubDateText = item.querySelector('pubDate')?.textContent || new Date().toISOString();
+            
+            // Convert RFC2822 format: "Fri, 06 Mar 2026 00:00:00 +0000" -> "Fri, 06 Mar 2026 00:00:00 GMT"
+            if (pubDateText.includes('+0000')) {
+                pubDateText = pubDateText.replace('+0000', 'GMT');
+            } else if (pubDateText.match(/[+-]\d{4}$/)) {
+                // Handle other timezone formats
+                pubDateText = pubDateText.replace(/[+-]\d{4}$/, 'GMT');
+            }
+            
+            return {
+                title: item.querySelector('title')?.textContent || 'No title',
+                link: item.querySelector('link')?.textContent || '#',
+                pubDate: pubDateText,
+                source: source.name,
+                color: source.color
+            };
+        });
     }
 
     parseRSS(xmlText, source) {
@@ -699,13 +855,25 @@ class DashboardController {
         const xml = parser.parseFromString(xmlText, 'text/xml');
         const items = xml.querySelectorAll('item');
         
-        return Array.from(items).slice(0, 3).map(item => ({
-            title: item.querySelector('title')?.textContent || 'No title',
-            link: item.querySelector('link')?.textContent || '#',
-            pubDate: item.querySelector('pubDate')?.textContent || new Date().toISOString(),
-            source: source.name,
-            color: source.color
-        }));
+        return Array.from(items).slice(0, 32).map(item => {
+            let pubDateText = item.querySelector('pubDate')?.textContent || new Date().toISOString();
+            
+            // Convert RFC2822 format: "Fri, 06 Mar 2026 00:00:00 +0000" -> "Fri, 06 Mar 2026 00:00:00 GMT"
+            if (pubDateText.includes('+0000')) {
+                pubDateText = pubDateText.replace('+0000', 'GMT');
+            } else if (pubDateText.match(/[+-]\d{4}$/)) {
+                // Handle other timezone formats
+                pubDateText = pubDateText.replace(/[+-]\d{4}$/, 'GMT');
+            }
+            
+            return {
+                title: item.querySelector('title')?.textContent || 'No title',
+                link: item.querySelector('link')?.textContent || '#',
+                pubDate: pubDateText,
+                source: source.name,
+                color: source.color
+            };
+        });
     }
 
     createNewsItem(item, container) {
@@ -739,17 +907,10 @@ class DashboardController {
         const now = new Date();
         const diffMs = now - date;
         
-        // Get timezone offset in hours (positive for GMT+N, negative for GMT-N)
-        const tzOffsetHours = -new Date().getTimezoneOffset() / 60;
-        const tzOffsetMs = tzOffsetHours * 3600 * 1000;
-        
-        // Reduce the time difference by timezone offset
-        const adjustedMs = diffMs - tzOffsetMs;
-        
-        const secs = Math.floor(adjustedMs / 1000);
-        const mins = Math.floor(adjustedMs / (1000 * 60));
-        const hrs = Math.floor(adjustedMs / (1000 * 3600));
-        const days = Math.floor(adjustedMs / (1000 * 3600 * 24));
+        const secs = Math.floor(diffMs / 1000);
+        const mins = Math.floor(diffMs / (1000 * 60));
+        const hrs = Math.floor(diffMs / (1000 * 3600));
+        const days = Math.floor(diffMs / (1000 * 3600 * 24));
         
         // Display in appropriate unit (prioritize seconds/minutes for small values)
         if (mins < 1) {
