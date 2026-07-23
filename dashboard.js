@@ -122,9 +122,8 @@ class DashboardController {
             this.networkSpeedLast = 'N/A';
             this.networkSpeedFetchInProgress = false;
 
-            // Update immediately and every 1 seconds
             this.updateNetworkSpeed();
-            setInterval(() => this.updateNetworkSpeed(), 1000);
+            setInterval(() => this.updateNetworkSpeed(), 10000);
         }
     }
 
@@ -156,24 +155,52 @@ class DashboardController {
             // Keep the previous value until a new measurement is ready
             networkElement.textContent = `NET: ${this.networkSpeedLast} Mbps`;
 
+            const url = 'https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf';
             const startTime = performance.now();
-            const response = await fetch(`https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf?cacheBust=${Date.now()}`, {
-                method: 'GET',
-                cache: 'no-cache',
-                mode: 'cors'
-            });
+            
+            // Try HEAD request first to get content-length without downloading file
+            let response = await fetch(url, {
+                method: 'HEAD',
+                mode: 'cors',
+                cache: 'no-store'
+            }).catch(() => null);
+
+            // Fallback to GET if HEAD fails
+            if (!response) {
+                response = await fetch(url, {
+                    method: 'GET',
+                    mode: 'cors',
+                    cache: 'no-store'
+                });
+            }
+
             const endTime = performance.now();
 
-            if (response.ok) {
-                const data = await response.arrayBuffer();
-                const sizeBytes = data.byteLength || 2048;
-                const durationMs = Math.max(1, endTime - startTime);
-                const durationSec = durationMs / 1000;
-                const speedBps = sizeBytes * 8 / durationSec;
-                const speedMbps = (speedBps / (1024 * 1024)).toFixed(2);
+            if (response && response.ok) {
+                // Get file size from content-length header (preferred)
+                let sizeBytes = parseInt(response.headers.get('content-length')) || null;
+                
+                // If HEAD didn't provide size and we did GET, read partial data
+                if (!sizeBytes && response.method !== 'HEAD') {
+                    try {
+                        const data = await response.arrayBuffer();
+                        sizeBytes = data.byteLength;
+                    } catch (e) {
+                        sizeBytes = null;
+                    }
+                }
 
-                this.networkSpeedLast = speedMbps;
-                networkElement.textContent = `NET: ${speedMbps} Mbps`;
+                if (sizeBytes) {
+                    const durationMs = Math.max(1, endTime - startTime);
+                    const durationSec = durationMs / 1000;
+                    const speedBps = sizeBytes * 8 / durationSec;
+                    const speedMbps = (speedBps / (1024 * 1024)).toFixed(2);
+
+                    this.networkSpeedLast = speedMbps;
+                    networkElement.textContent = `NET: ${speedMbps} Mbps`;
+                } else {
+                    networkElement.textContent = `NET: ${this.networkSpeedLast} Mbps`;
+                }
             } else {
                 networkElement.textContent = `NET: ${this.networkSpeedLast} Mbps`;
             }
